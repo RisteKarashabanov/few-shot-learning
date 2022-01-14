@@ -9,11 +9,19 @@ Networks papers.
 2. Downsize images to 28x28
 3. Uses background and evaluation sets present in the raw dataset
 """
+import skimage
 from skimage import io
 from skimage import transform
 import zipfile
 import shutil
 import os
+
+#This code is needed to import modules and files
+#from the parent directory
+import os, sys
+currrentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currrentdir)
+sys.path.append(parentdir)
 
 from config import DATA_PATH
 from few_shot.utils import mkdir, rmdir

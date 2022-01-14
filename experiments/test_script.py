@@ -1,6 +1,3 @@
-"""
-Reproduce Omniglot results of Snell et al Prototypical networks.
-"""
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 import argparse
@@ -14,18 +11,10 @@ from few_shot.callbacks import *
 from few_shot.utils import setup_dirs
 from config import PATH
 
-
 setup_dirs()
 assert torch.cuda.is_available()
 device = torch.device('cuda')
 torch.backends.cudnn.benchmark = True
-if torch.cuda.is_available():
-    #torch.cuda.set_device(5)
-    print('Number of devices: {}'.format(torch.cuda.device_count()))
-    torch.cuda.set_device(5)
-    print('Current device: {}'.format(torch.cuda.current_device()))
-
-
 
 
 ##############
@@ -82,61 +71,4 @@ evaluation_taskloader = DataLoader(
     evaluation,
     batch_sampler=NShotTaskSampler(evaluation, episodes_per_epoch, args.n_test, args.k_test, args.q_test),
     num_workers=4
-)
-
-
-#########
-# Model #
-#########
-model = get_few_shot_encoder(num_input_channels)
-model.to(device, dtype=torch.double)
-
-
-############
-# Training #
-############
-print(f'Training Prototypical network on {args.dataset}...')
-optimiser = Adam(model.parameters(), lr=1e-3)
-loss_fn = torch.nn.NLLLoss().cuda()
-
-
-def lr_schedule(epoch, lr):
-    # Drop lr every 2000 episodes
-    if epoch % drop_lr_every == 0:
-        return lr / 2
-    else:
-        return lr
-
-
-callbacks = [
-    EvaluateFewShot(
-        eval_fn=proto_net_episode,
-        num_tasks=evaluation_episodes,
-        n_shot=args.n_test,
-        k_way=args.k_test,
-        q_queries=args.q_test,
-        taskloader=evaluation_taskloader,
-        prepare_batch=prepare_nshot_task(args.n_test, args.k_test, args.q_test),
-        distance=args.distance
-    ),
-    ModelCheckpoint(
-        filepath=PATH + f'/models/proto_nets/{param_str}.pth',
-        monitor=f'val_{args.n_test}-shot_{args.k_test}-way_acc'
-    ),
-    LearningRateScheduler(schedule=lr_schedule),
-    CSVLogger(PATH + f'/logs/proto_nets/{param_str}.csv'),
-]
-
-fit(
-    model,
-    optimiser,
-    loss_fn,
-    epochs=n_epochs,
-    dataloader=background_taskloader,
-    prepare_batch=prepare_nshot_task(args.n_train, args.k_train, args.q_train),
-    callbacks=callbacks,
-    metrics=['categorical_accuracy'],
-    fit_function=proto_net_episode,
-    fit_function_kwargs={'n_shot': args.n_train, 'k_way': args.k_train, 'q_queries': args.q_train, 'train': True,
-                         'distance': args.distance},
 )

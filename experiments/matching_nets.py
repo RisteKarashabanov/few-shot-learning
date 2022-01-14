@@ -5,7 +5,7 @@ import argparse
 from torch.utils.data import DataLoader
 from torch.optim import Adam
 
-from few_shot.datasets import OmniglotDataset, MiniImageNet
+from few_shot.datasets import OmniglotDataset, MiniImageNet, Merced
 from few_shot.core import NShotTaskSampler, prepare_nshot_task, EvaluateFewShot
 from few_shot.matching import matching_net_episode
 from few_shot.train import fit
@@ -13,11 +13,14 @@ from few_shot.callbacks import *
 from few_shot.utils import setup_dirs
 from config import PATH
 
-
 setup_dirs()
 assert torch.cuda.is_available()
 device = torch.device('cuda')
 torch.backends.cudnn.benchmark = True
+if torch.cuda.is_available():
+    print('===> CUDA Device Name:', torch.cuda.get_device_name())
+    print('===> CUDA Device Number:', device)
+    print('===> CUDA GPU number: ', torch.cuda.current_device())
 
 
 ##############
@@ -50,6 +53,11 @@ elif args.dataset == 'miniImageNet':
     dataset_class = MiniImageNet
     num_input_channels = 3
     lstm_input_size = 1600
+elif args.dataset == 'merced':
+    n_epochs = 100
+    dataset_class = Merced
+    num_input_channels = 3
+    lstm_input_size = 1600
 else:
     raise(ValueError, 'Unsupported dataset')
 
@@ -57,6 +65,7 @@ param_str = f'{args.dataset}_n={args.n_train}_k={args.k_train}_q={args.q_train}_
             f'nv={args.n_test}_kv={args.k_test}_qv={args.q_test}_'\
             f'dist={args.distance}_fce={args.fce}'
 
+print("parameters: ", param_str)
 
 #########
 # Model #

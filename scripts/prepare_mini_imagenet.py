@@ -8,20 +8,28 @@ given in data/mini_imagenet.txt which is downloaded from the link provided in th
     data/miniImageNet/images
 2. Run the script
 """
-from tqdm import tqdm as tqdm
-import numpy as np
-import shutil
-import os
+#This code is needed to import modules and files
+#from the parent directory
+import os, sys
+currrentdir = os.path.dirname(os.path.realpath(__file__))
+parentdir = os.path.dirname(currrentdir)
+sys.path.append(parentdir)
 
 from config import DATA_PATH
 from few_shot.utils import mkdir, rmdir
 
+from tqdm import tqdm as tqdm
+import numpy as np
+import shutil
+import os
 
 # Clean up folders
 rmdir(DATA_PATH + '/miniImageNet/images_background')
 rmdir(DATA_PATH + '/miniImageNet/images_evaluation')
 mkdir(DATA_PATH + '/miniImageNet/images_background')
 mkdir(DATA_PATH + '/miniImageNet/images_evaluation')
+
+print('Folders created')
 
 # Find class identities
 classes = []
@@ -38,11 +46,15 @@ np.random.shuffle(classes)
 background_classes, evaluation_classes = classes[:80], classes[80:]
 
 # Create class folders
+print('Creating class folders ...')
+
 for c in background_classes:
     mkdir(DATA_PATH + f'/miniImageNet/images_background/{c}/')
+print('background folder created')
 
 for c in evaluation_classes:
     mkdir(DATA_PATH + f'/miniImageNet/images_evaluation/{c}/')
+print('evaluation folder created')
 
 # Move images to correct location
 for root, _, files in os.walk(DATA_PATH + '/miniImageNet/images'):
